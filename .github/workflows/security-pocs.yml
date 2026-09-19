@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - poc-origin-token-binding
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:

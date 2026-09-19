@@ -4,7 +4,6 @@ import { ZeroAddress } from "ethers";
 import * as coreDeployment from "../../ignition/core/deployment";
 import * as GlobalConfig from "../utils/GlobalConfig";
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import * as ethUtil from "ethereumjs-util";
 
 describe("Whitechain security PoCs", function () {
   let MapperContract: any;
@@ -18,7 +17,6 @@ describe("Whitechain security PoCs", function () {
   let Token1: any;
   let Token2: any;
 
-  const MULTISIG_ROLE = hre.ethers.keccak256(hre.ethers.toUtf8Bytes("MULTISIG_ROLE"));
   const amount = 1000n;
   const gasAmount = 500n;
 
@@ -89,8 +87,9 @@ describe("Whitechain security PoCs", function () {
     mapInfo: any,
     gas: bigint
   ) {
-    const deadline = (await time.latest()) + 3600n;
-    const salt = (await time.latest()) + 3601n;
+    const now = BigInt(await time.latest());
+    const deadline = now + 3600n;
+    const salt = now + 3601n;
     const saltHex = hre.ethers.toBeHex(salt, 32);
 
     const message = hre.ethers.solidityPackedKeccak256(

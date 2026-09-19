@@ -1,0 +1,38 @@
+name: Whitechain Security PoCs
+
+on:
+  push:
+    branches:
+      - poc-origin-token-binding
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  security-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ether
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Compile contracts
+        run: npx hardhat compile
+
+      - name: Run existing bridge and mapper tests
+        run: npm test
+
+      - name: Run focused security PoCs
+        run: npx hardhat test ./test/security/WhitechainSecurity.ts

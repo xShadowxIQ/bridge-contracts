@@ -391,20 +391,20 @@ describe("Whitechain security PoCs", function () {
     await (await Token0.mint(await TargetBridge.getAddress(), amount * 2n)).wait();
 
     await (await TargetBridge.connect(relayerAddress).receiveTokens([
-      mapBytes(user1.address),
-      mapBytes(user1.address),
-      amount,
-      1n,
       mapBytes("0x0000000000000000000000000000000000000001"),
+      1n,
+      amount,
+      mapBytes(user1.address),
+      mapBytes(user1.address),
     ])).wait();
 
     await expect(
       TargetBridge.connect(relayerAddress).receiveTokens([
-        mapBytes(user1.address),
-        mapBytes(user1.address),
-        1n,
-        1n,
         mapBytes("0x0000000000000000000000000000000000000002"),
+        1n,
+        1n,
+        mapBytes(user1.address),
+        mapBytes(user1.address),
       ])
     ).to.be.revertedWith("Bridge: Daily limit exceeded");
 
@@ -413,11 +413,11 @@ describe("Whitechain security PoCs", function () {
 
     await expect(
       TargetBridge.connect(relayerAddress).receiveTokens([
-        mapBytes(user1.address),
-        mapBytes(user1.address),
-        1n,
-        1n,
         mapBytes("0x0000000000000000000000000000000000000003"),
+        1n,
+        1n,
+        mapBytes(user1.address),
+        mapBytes(user1.address),
       ])
     ).to.not.be.reverted;
   });

@@ -248,10 +248,10 @@ describe("Whitechain security PoCs", function () {
     await (
       await TargetBridge.connect(relayerAddress).receiveTokens([
         mapBytes(user1.address),
-        toAddress,
-        amount,
         1n,
+        amount,
         mapBytes(user1.address),
+        toAddress,
       ])
     ).wait();
 

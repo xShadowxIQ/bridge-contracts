@@ -1,0 +1,22 @@
+name: Finding 1 PoC
+
+on:
+  push:
+    branches:
+      - "poc/finding-1-mapid-binding"
+
+jobs:
+  poc:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ether
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ether/package-lock.json
+      - run: npm ci
+      - run: npx hardhat test test/poc/Finding1MapIdBinding.ts

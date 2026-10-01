@@ -70,7 +70,7 @@ describe("Finding 1 - mapId/originToken not bound to relayer signature", functio
     const salt = hre.ethers.keccak256(hre.ethers.toUtf8Bytes("finding-1-decimals-poc"));
 
     const signedHash = hre.ethers.solidityPackedKeccak256(
-      ["address", "bytes32", "bytes32", "uint256", "uint256", "uint256", "uint64", "bytes32"],
+      ["address", "bytes32", "bytes32", "uint256", "uint256", "uint256", "uint256", "uint64", "bytes32"],
       [
         user.address,
         toAddress,

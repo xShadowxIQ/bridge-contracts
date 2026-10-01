@@ -87,7 +87,9 @@ describe("Finding 1 - mapId/originToken not bound to relayer signature", functio
     const signature = await relayer.signMessage(hre.ethers.getBytes(signedHash));
     const sig = hre.ethers.Signature.from(signature);
 
-    const beforeB = await tokenB.balanceOf(await bridge.getAddress());
+    const bridgeAddress = await bridge.getAddress();
+    const beforeUserB = await tokenB.balanceOf(user.address);
+    const beforeBridgeB = await tokenB.balanceOf(bridgeAddress);
 
     const tx = await bridge.connect(user).bridgeTokens(
       {
@@ -109,12 +111,18 @@ describe("Finding 1 - mapId/originToken not bound to relayer signature", functio
         mapB.targetChainId
       );
 
-    const afterB = await tokenB.balanceOf(await bridge.getAddress());
+    const afterUserB = await tokenB.balanceOf(user.address);
+    const afterBridgeB = await tokenB.balanceOf(bridgeAddress);
 
-    expect(afterB - beforeB).to.equal(amount);
+    expect(beforeUserB - afterUserB).to.equal(amount);
+    expect(afterBridgeB - beforeBridgeB).to.equal(amount);
 
-    console.log("Token A amount represented by signed raw amount:", hre.ethers.formatUnits(amount, 18));
-    console.log("Token B amount actually locked:", hre.ethers.formatUnits(amount, 6));
+    console.log("Signed raw amount as Token A (18 decimals):", hre.ethers.formatUnits(amount, 18));
+    console.log("Same raw amount as Token B (6 decimals):", hre.ethers.formatUnits(amount, 6));
+    console.log("User Token B balance before:", hre.ethers.formatUnits(beforeUserB, 6));
+    console.log("User Token B balance after :", hre.ethers.formatUnits(afterUserB, 6));
+    console.log("Bridge Token B balance before:", hre.ethers.formatUnits(beforeBridgeB, 6));
+    console.log("Bridge Token B balance after :", hre.ethers.formatUnits(afterBridgeB, 6));
     console.log("Raw amount locked:", amount.toString());
 
     expect(hre.ethers.formatUnits(amount, 18)).to.equal("100.0");
